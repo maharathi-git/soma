@@ -1,6 +1,7 @@
-// calendar.c
 #include <gtk/gtk.h>
 #include <time.h>
+#include <math.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
 GtkWidget *calendar;
 GtkWidget *event_window;
@@ -9,100 +10,99 @@ GtkWidget *event_label;
 GtkWidget *date_label;
 gchar current_event[1024];
 
-// Function to update the calendar widget
-void update_calendar(GtkWidget *widget, gpointer user_data) {
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
+#define NUM_PHASES 30
 
-    // Get selected date
-    guint year, month, day;
-    gtk_calendar_get_date(GTK_CALENDAR(calendar), &year, &month, &day);
+// Array to store the moon phase images
+GdkPixbuf *pixbuf[NUM_PHASES];
 
-    tm.tm_year = year - 1900;
-    tm.tm_mon = month;
-    tm.tm_mday = day;
-    
-    // Format and display selected date
-    gchar *date_text = g_strdup_printf("Selected Date: %d-%02d-%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
-    gtk_label_set_text(GTK_LABEL(date_label), date_text);
-    g_free(date_text);
-}
+// Function to load moon phase images
+gboolean load_moon_phase_images() {
+    const gchar *image_files[NUM_PHASES] = {
+        "resource/images/36x36/amasa.png", "resource/images/36x36/shukla_padyami.png", 
+        "resource/images/36x36/shukla_thadiya.png", "resource/images/36x36/shukla_vidiya.png", 
+        "resource/images/36x36/shukla_chavithi.png", "resource/images/36x36/shukla_panchami.png", 
+        "resource/images/36x36/shukla_shashti.png", "resource/images/36x36/shukla_sapthami.png", 
+        "resource/images/36x36/shukla_ashtami.png", "resource/images/36x36/shukla_navami.png", 
+        "resource/images/36x36/shukla_dashami.png", "resource/images/36x36/shukla_ekadashi.png", 
+        "resource/images/36x36/shukla_dwadashi.png", "resource/images/36x36/shukla_thrayodashi.png", 
+        "resource/images/36x36/shukla_chathurdashi.png", "resource/images/36x36/punnami.png", 
+        "resource/images/36x36/krushna_padyami.png", "resource/images/36x36/krushna_thadiya.png", 
+        "resource/images/36x36/krushna_vidiya.png", "resource/images/36x36/krushna_chavithi.png", 
+        "resource/images/36x36/krushna_panchami.png", "resource/images/36x36/krushna_shashti.png", 
+        "resource/images/36x36/krushna_sapthami.png", "resource/images/36x36/krushna_ashtami.png", 
+        "resource/images/36x36/krushna_navami.png", "resource/images/36x36/krushna_dashami.png", 
+        "resource/images/36x36/krushna_ekadashi.png", "resource/images/36x36/krushna_dwadashi.png", 
+        "resource/images/36x36/krushna_thrayodashi.png", "resource/images/36x36/krushna_chathurdashi.png"
+    };
 
-// Function to show event window for the selected date
-void show_event_window(GtkWidget *widget, gpointer user_data) {
-    gtk_window_present(GTK_WINDOW(event_window));
-}
-
-// Function to save the event for the selected date
-void save_event(GtkWidget *widget, gpointer user_data) {
-    const gchar *event = gtk_entry_get_text(GTK_ENTRY(event_entry));
-    if (event != NULL && event[0] != '\0') {
-        g_strlcpy(current_event, event, sizeof(current_event));
-        gtk_label_set_text(GTK_LABEL(event_label), current_event);
-        gtk_entry_set_text(GTK_ENTRY(event_entry), "");
+    for (int i = 0; i < NUM_PHASES; i++) {
+        pixbuf[i] = gdk_pixbuf_new_from_file(image_files[i], NULL);
+        if (pixbuf[i] == NULL) {
+            g_printerr("Failed to load image: %s\n", image_files[i]);
+            return FALSE;
+        }
     }
+    return TRUE;
 }
 
-// Function to initialize the application window
+// Function to draw moon phases in a circle
+static gboolean on_draw(GtkWidget *widget, cairo_t *cr) {
+    // Get the dimensions of the drawing area
+    int width = gtk_widget_get_allocated_width(widget);
+    int height = gtk_widget_get_allocated_height(widget);
+
+    // Set up the center of the circle
+    int center_x = width / 2;
+    int center_y = height / 2;
+
+    // Set up the radius of the circle
+    int radius = MIN(center_x, center_y) - 20;
+
+    for (int i = 0; i < NUM_PHASES; i++) {
+        // Calculate the position of each image
+        double angle = i * (2 * M_PI / NUM_PHASES) - (M_PI / 2);  // angle in radians
+        int x = center_x + (int)(radius * cos(angle)) - gdk_pixbuf_get_width(pixbuf[i]) / 2;
+        int y = center_y + (int)(radius * sin(angle)) - gdk_pixbuf_get_height(pixbuf[i]) / 2;
+
+        // Draw the moon phase image at the calculated position
+        gdk_cairo_set_source_pixbuf(cr, pixbuf[i], x, y);
+        cairo_paint(cr);
+    }
+
+    return FALSE;  // We don't need to keep redrawing
+}
+
+// Function to create the window and drawing area
 GtkWidget* create_main_window() {
     GtkWidget *window;
-    GtkWidget *box;
-    GtkWidget *button_show_event, *button_save_event;
+    GtkWidget *drawing_area;
+    GtkCssProvider *css_provider;
+    GdkDisplay *display;
+    GdkScreen *screen;
 
+    // Create the main window
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), "పంచాంగం");
+    gtk_window_set_title(GTK_WINDOW(window), "Moon Phases");
     gtk_window_set_default_size(GTK_WINDOW(window), 500, 500);
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
-    // Create a box container to arrange widgets vertically
-    box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    gtk_container_add(GTK_CONTAINER(window), box);
+     // Load the CSS file
+    css_provider = gtk_css_provider_new();
+    gtk_css_provider_load_from_file(css_provider, g_file_new_for_path("resource/css/style.css"), NULL);
 
-    // Create a calendar widget
-    calendar = gtk_calendar_new();
-    gtk_box_pack_start(GTK_BOX(box), calendar, TRUE, TRUE, 0);
+    // Get the default display and screen
+    display = gdk_display_get_default();
+    screen = gdk_display_get_default_screen(display);
 
-    // Label for selected date
-    date_label = gtk_label_new("Selected Date: None");
-    gtk_box_pack_start(GTK_BOX(box), date_label, FALSE, FALSE, 0);
+    // Apply the CSS to the screen
+    gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
 
-    // Button to show event window
-    button_show_event = gtk_button_new_with_label("Show Event");
-    g_signal_connect(button_show_event, "clicked", G_CALLBACK(show_event_window), NULL);
-    gtk_box_pack_start(GTK_BOX(box), button_show_event, FALSE, FALSE, 0);
+    // Create a drawing area to draw the moon phases
+    drawing_area = gtk_drawing_area_new();
+    gtk_container_add(GTK_CONTAINER(window), drawing_area);
 
-    // Update calendar when date is selected
-    g_signal_connect(calendar, "day-selected", G_CALLBACK(update_calendar), NULL);
-
-    return window;
-}
-
-// Function to initialize the event window
-GtkWidget* create_event_window() {
-    GtkWidget *window;
-    GtkWidget *box;
-    GtkWidget *button_save_event;
-
-    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), "Event for Selected Date");
-    gtk_window_set_default_size(GTK_WINDOW(window), 300, 200);
-
-    // Create a box container to arrange widgets vertically
-    box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    gtk_container_add(GTK_CONTAINER(window), box);
-
-    // Entry field for event description
-    event_entry = gtk_entry_new();
-    gtk_box_pack_start(GTK_BOX(box), event_entry, FALSE, FALSE, 0);
-
-    // Save event button
-    button_save_event = gtk_button_new_with_label("Save Event");
-    g_signal_connect(button_save_event, "clicked", G_CALLBACK(save_event), NULL);
-    gtk_box_pack_start(GTK_BOX(box), button_save_event, FALSE, FALSE, 0);
-
-    // Label to display saved event
-    event_label = gtk_label_new("No event for this date.");
-    gtk_box_pack_start(GTK_BOX(box), event_label, FALSE, FALSE, 0);
+    // Connect the draw signal to our custom draw function
+    g_signal_connect(drawing_area, "draw", G_CALLBACK(on_draw), NULL);
 
     return window;
 }
@@ -110,15 +110,27 @@ GtkWidget* create_event_window() {
 int main(int argc, char *argv[]) {
     GtkWidget *main_window;
 
+    // Initialize GTK
     gtk_init(&argc, &argv);
 
-    // Create main window and event window
-    main_window = create_main_window();
-    event_window = create_event_window();
+    // Load moon phase images
+    if (!load_moon_phase_images()) {
+        return 1;  // Exit if images fail to load
+    }
 
-    // Show main window
+    // Create the main window
+    main_window = create_main_window();
+
+    // Show the main window
     gtk_widget_show_all(main_window);
+
+    // Start the GTK main event loop
     gtk_main();
-    
+
+    // Free the loaded images
+    for (int i = 0; i < NUM_PHASES; i++) {
+        g_object_unref(pixbuf[i]);
+    }
+
     return 0;
 }
