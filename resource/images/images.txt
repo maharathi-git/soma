@@ -1,0 +1,2 @@
+ this file is created to upload images in current folder
+ 
