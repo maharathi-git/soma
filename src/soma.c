@@ -3,6 +3,8 @@
 #include <math.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
+#include "soma.h"
+
 GtkWidget *calendar;
 GtkWidget *event_window;
 GtkWidget *event_entry;
@@ -12,26 +14,13 @@ gchar current_event[1024];
 
 
 int selected_phase = -1;  // -1 means no selection
+int hovered_phase = -1;
 GtkWidget *phase_label;
 
-#define NUM_PHASES 30
 
 // Array to store the moon phase images
-GdkPixbuf *pixbuf[NUM_PHASES];
+GdkPixbuf *pixbuf[THITHI];
 
-const char *phase_names[NUM_PHASES] = {
-    "amasa", "shukla padyami", "shukla vidiya", "shukla thadiya",
-    "shukla chavithi", "shukla panchami", "shukla shashti", "shukla sapthami",
-    "shukla ashtami", "shukla navami", "shukla dashami", "shukla ekadashi",
-    "shukla dwadashi", "shukla thrayodashi", "shukla chathurdashi", "punnami",
-    "krushna padyami", "krushna vidiya", "krushna thadiya", "krushna chavithi",
-    "krushna panchami", "krushna shashti", "krushna sapthami", "krushna ashtami",
-    "krushna navami", "krushna dashami", "krushna ekadashi", "krushna dwadashi",
-    "krushna thrayodashi", "krushna chathurdashi"
-};
-
-// Update global variable to track hovered phase
-int hovered_phase = -1;
 
 static gboolean on_mouse_click(GtkWidget *widget, GdkEventButton *event, gpointer data) {
 
@@ -43,8 +32,8 @@ static gboolean on_mouse_click(GtkWidget *widget, GdkEventButton *event, gpointe
     int center_y = height / 2;
     int radius = MIN(center_x, center_y) - 20;
     
-    for (int i = 0; i < NUM_PHASES; i++) {
-        double angle = i * (2 * M_PI / NUM_PHASES) - (M_PI / 2);
+    for (int i = 0; i < THITHI; i++) {
+        double angle = i * (2 * M_PI / THITHI) - (M_PI / 2);
         int img_width = gdk_pixbuf_get_width(pixbuf[i]);
         int img_height = gdk_pixbuf_get_height(pixbuf[i]);
         int x = center_x + (int)(radius * cos(angle)) - img_width / 2;
@@ -62,18 +51,18 @@ static gboolean on_mouse_click(GtkWidget *widget, GdkEventButton *event, gpointe
 }
 
 static gboolean on_mouse_motion(GtkWidget *widget, GdkEventMotion *event, gpointer data) {
+    (void)data;
 
-    (void)data; //suppress the warinings
     int width = gtk_widget_get_allocated_width(widget);
     int height = gtk_widget_get_allocated_height(widget);
     int center_x = width / 2;
     int center_y = height / 2;
     int radius = MIN(center_x, center_y) - 20;
     
-    hovered_phase = -1;  // Reset hovered phase
+    int new_hovered_phase = -1;  // Track the new hovered phase
 
-    for (int i = 0; i < NUM_PHASES; i++) {
-        double angle = i * (2 * M_PI / NUM_PHASES) - (M_PI / 2);
+    for (int i = 0; i < THITHI; i++) {
+        double angle = i * (2 * M_PI / THITHI) - (M_PI / 2);
         int img_width = gdk_pixbuf_get_width(pixbuf[i]);
         int img_height = gdk_pixbuf_get_height(pixbuf[i]);
 
@@ -83,35 +72,22 @@ static gboolean on_mouse_motion(GtkWidget *widget, GdkEventMotion *event, gpoint
         if (event->x >= x && event->x <= (x + img_width) &&
             event->y >= y && event->y <= (y + img_height)) {
             
-            hovered_phase = i;  // Set hovered phase
-            gtk_widget_queue_draw(widget);  // Redraw the widget to show phase name
+            new_hovered_phase = i;  // Set the hovered phase
+
+            // Only redraw if the hovered phase has changed
+            if (new_hovered_phase != hovered_phase) {
+                hovered_phase = new_hovered_phase;
+                gtk_widget_queue_draw(widget);  // Redraw the widget
+            }
             break;
         }
     }
     return TRUE;
 }
-
 // Function to load moon phase images
 gboolean load_moon_phase_images() {
-    const gchar *image_files[NUM_PHASES] = {
-        "resource/images/36x36/amasa.png", "resource/images/36x36/shukla_padyami.png", 
-        "resource/images/36x36/shukla_thadiya.png", "resource/images/36x36/shukla_vidiya.png", 
-        "resource/images/36x36/shukla_chavithi.png", "resource/images/36x36/shukla_panchami.png", 
-        "resource/images/36x36/shukla_shashti.png", "resource/images/36x36/shukla_sapthami.png", 
-        "resource/images/36x36/shukla_ashtami.png", "resource/images/36x36/shukla_navami.png", 
-        "resource/images/36x36/shukla_dashami.png", "resource/images/36x36/shukla_ekadashi.png", 
-        "resource/images/36x36/shukla_dwadashi.png", "resource/images/36x36/shukla_thrayodashi.png", 
-        "resource/images/36x36/shukla_chathurdashi.png", "resource/images/36x36/punnami.png", 
-        "resource/images/36x36/krushna_padyami.png", "resource/images/36x36/krushna_thadiya.png", 
-        "resource/images/36x36/krushna_vidiya.png", "resource/images/36x36/krushna_chavithi.png", 
-        "resource/images/36x36/krushna_panchami.png", "resource/images/36x36/krushna_shashti.png", 
-        "resource/images/36x36/krushna_sapthami.png", "resource/images/36x36/krushna_ashtami.png", 
-        "resource/images/36x36/krushna_navami.png", "resource/images/36x36/krushna_dashami.png", 
-        "resource/images/36x36/krushna_ekadashi.png", "resource/images/36x36/krushna_dwadashi.png", 
-        "resource/images/36x36/krushna_thrayodashi.png", "resource/images/36x36/krushna_chathurdashi.png"
-    };
-
-    for (int i = 0; i < NUM_PHASES; i++) {
+    
+    for (int i = 0; i < THITHI; i++) {
         pixbuf[i] = gdk_pixbuf_new_from_file(image_files[i], NULL);
         if (pixbuf[i] == NULL) {
             g_printerr("Failed to load image: %s\n", image_files[i]);
@@ -121,21 +97,43 @@ gboolean load_moon_phase_images() {
     return TRUE;
 }
 
+// Helper function to draw text with a background
+void draw_text_with_bg(cairo_t *cr, const char *text, int x, int y, double r, double g, double b) {
+    cairo_text_extents_t extents;
+    cairo_set_font_size(cr, 14);
+    cairo_text_extents(cr, text, &extents);
+
+    int padding = 4;
+    int bg_width = extents.width + 2 * padding;
+    int bg_height = extents.height + 2 * padding;
+
+    // Draw semi-transparent rectangle
+    cairo_set_source_rgba(cr, 0, 0, 0, 0.6);  // Black background, 60% opacity
+    cairo_rectangle(cr, x - bg_width / 2, y - bg_height / 2, bg_width, bg_height);
+    cairo_fill(cr);
+
+    // Draw text
+    cairo_set_source_rgb(cr, r, g, b);
+    cairo_move_to(cr, x - extents.width / 2, y + extents.height / 2 - padding);
+    cairo_show_text(cr, text);
+}
+
 static gboolean on_draw(GtkWidget *widget, cairo_t *cr) {
+    int width = gtk_widget_get_allocated_width(widget);
+    int height = gtk_widget_get_allocated_height(widget);
+    int center_x = width / 2;
+    int center_y = height / 2;
+    int radius = MIN(center_x, center_y) - 20;
 
     // Set black background
     cairo_set_source_rgb(cr, 0, 0, 0);
     cairo_paint(cr);
 
-    int width = gtk_widget_get_allocated_width(widget);
-    int height = gtk_widget_get_allocated_height(widget);
+    int selected_x = -1, selected_y = -1;  // To store selected phase position
+    int hovered_x = -1, hovered_y = -1;    // To store hovered phase position
 
-    int center_x = width / 2;
-    int center_y = height / 2;
-    int radius = MIN(center_x, center_y) - 40;
-
-    for (int i = 0; i < NUM_PHASES; i++) {
-        double angle = i * (2 * M_PI / NUM_PHASES) - (M_PI / 2);
+    for (int i = 0; i < THITHI; i++) {
+        double angle = i * (2 * M_PI / THITHI) - (M_PI / 2);
         int img_width = gdk_pixbuf_get_width(pixbuf[i]);
         int img_height = gdk_pixbuf_get_height(pixbuf[i]);
 
@@ -146,23 +144,62 @@ static gboolean on_draw(GtkWidget *widget, cairo_t *cr) {
         gdk_cairo_set_source_pixbuf(cr, pixbuf[i], x, y);
         cairo_paint(cr);
 
-        // If this is the selected phase, draw a highlight
+        // Store position of selected phase for later
         if (i == selected_phase) {
+            selected_x = x + img_width / 2;
+            selected_y = y + img_height + 20;
             cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);  // Red highlight
-            cairo_set_line_width(cr, 1.6);
+            cairo_set_line_width(cr, 2);
             cairo_arc(cr, x + img_width / 2, y + img_height / 2, img_width / 2 + 5, 0, 2 * M_PI);
             cairo_stroke(cr);
         }
 
-         // If the phase is hovered over, or clicked, draw the phase name below it
-        if (i == hovered_phase || i == selected_phase) {
-            cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);  // White text
-            cairo_set_font_size(cr, 12);
-            cairo_move_to(cr, x + img_width / 2 - 30, y + img_height + 20);  // Position the text below the image
-            cairo_show_text(cr, phase_names[i]);
+        // Store position of hovered phase for later
+        if (i == hovered_phase) {
+            hovered_x = x + img_width / 2;
+            hovered_y = y + img_height + 40;  // Slightly below selected text
         }
     }
 
+    // Draw the selected phase name (if any)
+    if (selected_phase != -1) {
+        if( selected_phase >= 13 && selected_phase <= 17)
+            draw_text_with_bg(cr, thithulu[selected_phase], selected_x, selected_y-70, 1.0, 1.0, 0.0);  // Yellow
+        else
+            draw_text_with_bg(cr, thithulu[selected_phase], selected_x, selected_y, 1.0, 1.0, 0.0);  // Yellow
+    }
+
+    // Draw the hovered phase name (if different from selected)
+    if (hovered_phase != -1 && hovered_phase != selected_phase) {
+        if( hovered_phase >= 13 && hovered_phase <= 17)
+            draw_text_with_bg(cr, thithulu[hovered_phase], hovered_x, hovered_y-70, 0.5, 1.0, 1.0);  // Cyan
+        else
+            draw_text_with_bg(cr, thithulu[hovered_phase], hovered_x, hovered_y, 0.5, 1.0, 1.0);  // Cyan
+    }
+
+    // Draw Year Name at Center
+    cairo_set_source_rgb(cr, 1.0, 1.0, 1.0); // Yellow text
+    cairo_set_font_size(cr, 36);
+    cairo_text_extents_t extents;
+    cairo_text_extents(cr, prasthutha_varsham, &extents);
+
+    cairo_move_to(cr, center_x - extents.width / 2, center_y + extents.height / 2);
+    cairo_show_text(cr, prasthutha_varsham);
+
+    // If hovered or clicked, show previous & next year names
+    if (show_adjacent_years) {
+        cairo_set_source_rgb(cr, 0.5, 1.0, 1.0); // Cyan text
+        cairo_text_extents_t prev_extents, next_extents;
+        cairo_text_extents(cr, previous_varsham, &prev_extents);
+        cairo_text_extents(cr, next_varsham, &next_extents);
+
+        cairo_move_to(cr, center_x - prev_extents.width / 2, center_y - 40);
+        cairo_show_text(cr, previous_varsham);
+
+        cairo_move_to(cr, center_x - next_extents.width / 2, center_y + 40);
+        cairo_show_text(cr, next_varsham);
+    }
+    
     return FALSE;
 }
 
@@ -212,6 +249,9 @@ int main(int argc, char *argv[]) {
         return 1;  // Exit if images fail to load
     }
 
+    // get varsham
+    get_prasthutha_varsham();
+
     // Create the main window
     main_window = create_main_window();
 
@@ -222,8 +262,9 @@ int main(int argc, char *argv[]) {
     gtk_main();
 
     // Free the loaded images
-    for (int i = 0; i < NUM_PHASES; i++) {
+    for (int i = 0; i < THITHI; i++) {
         g_object_unref(pixbuf[i]);
     }
+
     return 0;
 }
