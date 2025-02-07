@@ -78,10 +78,6 @@ static gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data)
     int center_y = height / 2;
     int radius = MIN(center_x, center_y) - 20;
 
-    // // Clear the background
-    // cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);  // Set black background
-    // cairo_paint(cr);  // Paint the background
-
     for (int i = 0; i < THITHI; i++) {
         double angle = i * (2 * M_PI / THITHI) - (M_PI / 2);
         int img_width = gdk_pixbuf_get_width(pixbuf[i]);
@@ -130,24 +126,53 @@ static gboolean on_draw(GtkWidget *widget, cairo_t *cr, gpointer data)
 
     cairo_move_to(cr, text_x, text_y);
     cairo_show_text(cr, prasthutha_varsham);
+    cairo_new_path(cr);
 
-    // If adjacent years should be shown, draw them.
+    // Only show additional years if hovering over the year text.
     if (show_adjacent_years) {
-        cairo_set_font_size(cr, 18);
-        cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);  // Cyan-like text
+        int num_years = 5; // Number of previous/next years to display
+        // Base settings for the central year.
+        double base_font_size = 36;
+        double base_alpha = 1.0;
+        double font_decrement = 4;      // How much the font size reduces per step
+        double alpha_decrement = 0.20;    // How much the alpha reduces per step
+        double vertical_offset = 40;      // Vertical spacing between years
 
-        cairo_text_extents_t ext_prev, ext_next;
-        cairo_text_extents(cr, enaka_varsham, &ext_prev);
-        cairo_text_extents(cr, mundu_varsham, &ext_next);
+        // Draw next years above the central year.
+        for (int i = 1; i <= num_years; i++) {
+            double font_size = base_font_size - (i * font_decrement);
+            double alpha = base_alpha - (i * alpha_decrement);
+            if (alpha < 0) alpha = 0;
+            cairo_set_font_size(cr, font_size);
+            cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, alpha);
+            cairo_text_extents_t ext;
+            cairo_text_extents(cr, varsham[prasthutha_varsha_soochika+i], &ext);
+            double x = center_x - ext.width / 2;
+            double y = center_y - vertical_offset * i;  // Move up for next years
 
-        // Draw previous year above the central text.
-        cairo_move_to(cr, center_x - ext_prev.width/2, center_y - 50);
-        cairo_show_text(cr, enaka_varsham);
+            cairo_move_to(cr, x, y);
+            cairo_show_text(cr, varsham[prasthutha_varsha_soochika+i]);
+            cairo_new_path(cr);
+        }
 
-        // Draw next year below the central text.
-        cairo_move_to(cr, center_x - ext_next.width/2, center_y + 50);
-        cairo_show_text(cr, mundu_varsham);
+        vertical_offset = 40;      // Vertical spacing between years
+        // Draw previous years below the central year.
+        for (int i = 1; i <= num_years; i++) {
+            double font_size = base_font_size - (i * font_decrement);
+            double alpha = base_alpha - (i * alpha_decrement);
+            if (alpha < 0) alpha = 0;
+            cairo_set_font_size(cr, font_size);
+            cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, alpha);
+            cairo_text_extents_t ext;
+            cairo_text_extents(cr, varsham[prasthutha_varsha_soochika-i], &ext);
+            double x = center_x - ext.width / 2;
+            double y = center_y + vertical_offset * i + 20;  // Move down for previous years
+            cairo_move_to(cr, x, y);
+            cairo_show_text(cr, varsham[prasthutha_varsha_soochika-i]);
+            cairo_new_path(cr);
+        }
     }
+
 
     return FALSE;
 }
@@ -224,7 +249,7 @@ static gboolean on_mouse_motion(GtkWidget *widget, GdkEventMotion *event, gpoint
         show_adjacent_years = TRUE;
         gtk_widget_queue_draw(widget);
     } else if (!year_hovered && show_adjacent_years) {
-        show_adjacent_years = TRUE;
+        show_adjacent_years = FALSE;
         gtk_widget_queue_draw(widget);
     }
     return TRUE;
@@ -235,6 +260,7 @@ static gboolean on_mouse_motion(GtkWidget *widget, GdkEventMotion *event, gpoint
 static gboolean on_scroll_event(GtkWidget *widget, GdkEventScroll *event, gpointer data)
 {
     (void)data;
+    (void)widget;
     if (event->x >= year_bbox_x && event->x <= (year_bbox_x + year_bbox_width) &&
         event->y >= year_bbox_y && event->y <= (year_bbox_y + year_bbox_height))
     {
