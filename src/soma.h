@@ -53,33 +53,90 @@ void move_year_down(){
     snprintf(mundu_varsham, sizeof(mundu_varsham), "%s", varsham[prasthutha_varsha_soochika-2]);
     --prasthutha_varsha_soochika;
 }
-/*void get_prasthutha_varsham() {
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
-    int year = tm.tm_year + 1900;
 
-    int base_year = 1867;  // Prabhava year in Gregorian calendar
-    prasthutha_varsha_soochika = (year - base_year) % 60;
-    if (prasthutha_varsha_soochika < 0) prasthutha_varsha_soochika += 60;
+// masalu
+static const char* masam[] = {
+    "chaithram", "vaishakham", "jyeshtam", "ashadam",
+    "shravanam", "bhadrapadam", "ashvayujam", "karthikam",
+    "margashiram", "pushyam", "magham", "phalgunam"
+};
 
-    snprintf(prasthutha_varsham, sizeof(prasthutha_varsham), "%s", varsham[prasthutha_varsha_soochika]);
+    // "చైత్రము", "వైశాఖము", "జ్యేష్ఠము", "ఆషాఢము",
+    // "శ్రావణము", "భాద్రపదము", "ఆశ్వీయుజము", "కార్తీకము",
+    // "మార్గశిరము", "పుష్యము", "మాఘము", "ఫాల్గుణము"
 
-    int prev_index = (prasthutha_varsha_soochika - 1 + 60) % 60;
-    int next_index = (prasthutha_varsha_soochika + 1) % 60;
+char prasthutha_masam[16];
+char enaka_masam[16];
+char mundu_masam[16];
+int prasthutha_masa_soochika=0;
 
-    snprintf(enaka_varsham, sizeof(enaka_varsham), "%s", varsham[prev_index]);
-    snprintf(mundu_varsham, sizeof(mundu_varsham), "%s", varsham[next_index]);
-}*/
+void get_prasthutha_masam() {
 
-// // masalu
-// static const char* masam[] = {
- 
-// };
+    int base_masam = 1;
+    int nela = 6;
+    int cycle_position = (nela - base_masam) % 12;
+    if (cycle_position < 0) cycle_position += 12;
+
+    prasthutha_masa_soochika=cycle_position;
+    snprintf(enaka_varsham, sizeof(enaka_varsham), "%s", masam[cycle_position-1]);
+    snprintf(prasthutha_masam, sizeof(prasthutha_varsham), "%s", masam[cycle_position]);
+    snprintf(mundu_masam, sizeof(mundu_varsham), "%s", masam[cycle_position+1]);
+}
+
+void move_masa_up()
+{
+    snprintf(enaka_masam, sizeof(enaka_masam), "%s", masam[prasthutha_masa_soochika]);
+    snprintf(prasthutha_masam, sizeof(prasthutha_masam), "%s", masam[prasthutha_masa_soochika+1]);
+    snprintf(mundu_masam, sizeof(mundu_masam), "%s", masam[prasthutha_masa_soochika+2]);
+    ++prasthutha_masa_soochika;
+}
+
+void move_masa_down(){
+    snprintf(enaka_masam, sizeof(enaka_masam), "%s", masam[prasthutha_masa_soochika]);
+    snprintf(prasthutha_masam, sizeof(prasthutha_masam), "%s", masam[prasthutha_masa_soochika-1]);
+    snprintf(mundu_masam, sizeof(mundu_masam), "%s", masam[prasthutha_masa_soochika-2]);
+    --prasthutha_masa_soochika;
+}
 
 // // ruthuvulu
-// static const char* ruthuvu[] = {
+static const char* ruthuvu[] = {
+    "vasantham", "greeshmam", "varsham",
+    "sharad", "hemantham", "shishira"
+};
 
-// };
+char prasthutha_ruthuvu[16];
+char enaka_ruthuvu[16];
+char mundu_ruthuvu[16];
+int prasthutha_ruthu_soochika=0;
+
+void get_prasthutha_ruthuvu() {
+
+    // if(prasthutha_masa_soochika%2)
+        // prasthutha_ruthu_soochika=prasthutha_masa_soochika-1;
+    // else
+        // prasthutha_ruthu_soochika=prasthutha_masa_soochika;
+    prasthutha_ruthu_soochika=prasthutha_masa_soochika/2;
+    // prasthutha_ruthu_soochika=cycle_position;
+    snprintf(enaka_ruthuvu, sizeof(enaka_ruthuvu), "%s", ruthuvu[prasthutha_ruthu_soochika-1]);
+    snprintf(prasthutha_ruthuvu, sizeof(prasthutha_ruthuvu), "%s", ruthuvu[prasthutha_ruthu_soochika]);
+    snprintf(mundu_ruthuvu, sizeof(mundu_ruthuvu), "%s", ruthuvu[prasthutha_ruthu_soochika+1]);
+}
+
+void move_ruthu_up()
+{
+    snprintf(enaka_ruthuvu, sizeof(enaka_ruthuvu), "%s", ruthuvu[prasthutha_ruthu_soochika]);
+    snprintf(prasthutha_ruthuvu, sizeof(prasthutha_ruthuvu), "%s", ruthuvu[prasthutha_ruthu_soochika+1]);
+    snprintf(mundu_ruthuvu, sizeof(mundu_ruthuvu), "%s", ruthuvu[prasthutha_ruthu_soochika+2]);
+    ++prasthutha_ruthu_soochika;
+}
+
+void move_ruthu_down(){
+    snprintf(enaka_ruthuvu, sizeof(enaka_ruthuvu), "%s", ruthuvu[prasthutha_ruthu_soochika]);
+    snprintf(prasthutha_ruthuvu, sizeof(prasthutha_ruthuvu), "%s", ruthuvu[prasthutha_ruthu_soochika-1]);
+    snprintf(mundu_ruthuvu, sizeof(mundu_ruthuvu), "%s", ruthuvu[prasthutha_ruthu_soochika-2]);
+    --prasthutha_ruthu_soochika;
+}
+
 
 // // nakhatralu
 // static const char* nakshatram[] = {
@@ -100,21 +157,21 @@ const char *thithulu[THITHI] = {
 };
 
 const gchar *image_files[THITHI] = {
-    "resource/images/36x36/amasa.png", "resource/images/36x36/shukla_padyami.png", 
-    "resource/images/36x36/shukla_thadiya.png", "resource/images/36x36/shukla_vidiya.png", 
-    "resource/images/36x36/shukla_chavithi.png", "resource/images/36x36/shukla_panchami.png", 
-    "resource/images/36x36/shukla_shashti.png", "resource/images/36x36/shukla_sapthami.png", 
-    "resource/images/36x36/shukla_ashtami.png", "resource/images/36x36/shukla_navami.png", 
-    "resource/images/36x36/shukla_dashami.png", "resource/images/36x36/shukla_ekadashi.png", 
-    "resource/images/36x36/shukla_dwadashi.png", "resource/images/36x36/shukla_thrayodashi.png", 
-    "resource/images/36x36/shukla_chathurdashi.png", "resource/images/36x36/punnami.png", 
-    "resource/images/36x36/krushna_padyami.png", "resource/images/36x36/krushna_thadiya.png", 
-    "resource/images/36x36/krushna_vidiya.png", "resource/images/36x36/krushna_chavithi.png", 
-    "resource/images/36x36/krushna_panchami.png", "resource/images/36x36/krushna_shashti.png", 
-    "resource/images/36x36/krushna_sapthami.png", "resource/images/36x36/krushna_ashtami.png", 
-    "resource/images/36x36/krushna_navami.png", "resource/images/36x36/krushna_dashami.png", 
-    "resource/images/36x36/krushna_ekadashi.png", "resource/images/36x36/krushna_dwadashi.png", 
-    "resource/images/36x36/krushna_thrayodashi.png", "resource/images/36x36/krushna_chathurdashi.png"
+    "resource/images/amasa.png", "resource/images/shukla_padyami.png", 
+    "resource/images/shukla_thadiya.png", "resource/images/shukla_vidiya.png", 
+    "resource/images/shukla_chavithi.png", "resource/images/shukla_panchami.png", 
+    "resource/images/shukla_shashti.png", "resource/images/shukla_sapthami.png", 
+    "resource/images/shukla_ashtami.png", "resource/images/shukla_navami.png", 
+    "resource/images/shukla_dashami.png", "resource/images/shukla_ekadashi.png", 
+    "resource/images/shukla_dwadashi.png", "resource/images/shukla_thrayodashi.png", 
+    "resource/images/shukla_chathurdashi.png", "resource/images/punnami.png", 
+    "resource/images/krushna_padyami.png", "resource/images/krushna_thadiya.png", 
+    "resource/images/krushna_vidiya.png", "resource/images/krushna_chavithi.png", 
+    "resource/images/krushna_panchami.png", "resource/images/krushna_shashti.png", 
+    "resource/images/krushna_sapthami.png", "resource/images/krushna_ashtami.png", 
+    "resource/images/krushna_navami.png", "resource/images/krushna_dashami.png", 
+    "resource/images/krushna_ekadashi.png", "resource/images/krushna_dwadashi.png", 
+    "resource/images/krushna_thrayodashi.png", "resource/images/krushna_chathurdashi.png"
 };
 
 GdkPixbuf *pixbuf[THITHI];
@@ -130,11 +187,6 @@ gboolean load_moon_phase_images()
     return TRUE;
 }
 
-
-
-
-
-
 // sooryudu
 // muhurtham
 // static const char* muhurtham[] = {
@@ -146,9 +198,6 @@ gboolean load_moon_phase_images()
 
 // };
 
-
-
 #endif
-
 
 // "Prabhava", "Vibhava", "Shukla", "Pramodoota", "Prajotpati", "Angeerasa", "Sreemukha", "Bhaava", "Yuva", "Dhaatu", "Eeswara", "Bahudhanya", "Pramadi", "Vikrama", "Vrusha", "Chitrabhanu", "Svabhanu", "Tarana", "Pardhiva", "Vyaya", "Sarvajittu", "Sarvadhari", "Virodhi", "Vikruti", "Khara", "Nandana", "Vijaya", "Jaya", "Manmadha", "Durmukhi", "Hevilambi", "Vilambi", "Vikari", "Sharvari", "Plava", "Shubhakrutu", "Shobhakrutu", "Krodhi", "Vishvavasu", "Parabhava", "Plavanga", "Keelaka", "Soumya", "Sadharana", "Virodhikrutu", "Pareedhani", "Pramadeecha", "Ananda", "Rakshasa", "Nala", "Pingala", "KaLayukti", "Siddhaardhi", "Raudri", "Durmati", "Dundubhi", "Rudhirodgari", "Raktakshi", "Krodhana", "Akshaya"
