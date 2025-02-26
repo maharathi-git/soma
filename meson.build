@@ -5,7 +5,7 @@ project('soma', 'c',
 gtk_dep = dependency('gtk+-3.0')
 
 executable('soma',
-  'src/soma.c',
+  'src/soma.c', 'src/dhruva.c', 'src/calendar_list.c',
   dependencies : gtk_dep,
   link_args : ['-lm'],  # Link with the math library
   install : true)
