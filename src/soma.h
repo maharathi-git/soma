@@ -10,12 +10,17 @@
 #define RUTHUVU_SIZE 6
 #define THITHI 30
 
+#define MUHURTHA_COUNT 30  // 30 muhurthas in a day
+#define HOUR_COUNT 12      // 12 hours in a half-day cycle
+
 // Declarations for arrays
 extern const char *varsham[VARSHAM_SIZE];
 extern const char *masam[MASAM_SIZE];
 extern const char *ruthuvu[RUTHUVU_SIZE];
 extern const char *thithulu[THITHI];
 extern const gchar *image_files[THITHI];
+extern const char *nakshatra[27];
+extern const char *varam[7];
 
 // External variables
 extern char prasthutha_varsham[20];
