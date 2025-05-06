@@ -46,23 +46,34 @@ const char *thithulu[THITHI] = {
 
 // thithulu
 const gchar *image_files[THITHI] = {
-    "resource/images/amasa.png", "resource/images/shukla_padyami.png", 
-    "resource/images/shukla_vidiya.png", "resource/images/shukla_thadiya.png", 
-    "resource/images/shukla_chavithi.png", "resource/images/shukla_panchami.png", 
-    "resource/images/shukla_shashti.png", "resource/images/shukla_sapthami.png", 
-    "resource/images/shukla_ashtami.png", "resource/images/shukla_navami.png", 
-    "resource/images/shukla_dashami.png", "resource/images/shukla_ekadashi.png", 
-    "resource/images/shukla_dwadashi.png", "resource/images/shukla_thrayodashi.png", 
-    "resource/images/shukla_chathurdashi.png", "resource/images/punnami.png", 
-    "resource/images/krushna_padyami.png", "resource/images/krushna_vidiya.png", 
-    "resource/images/krushna_thadiya.png", "resource/images/krushna_chavithi.png", 
-    "resource/images/krushna_panchami.png", "resource/images/krushna_shashti.png", 
-    "resource/images/krushna_sapthami.png", "resource/images/krushna_ashtami.png", 
-    "resource/images/krushna_navami.png", "resource/images/krushna_dashami.png", 
-    "resource/images/krushna_ekadashi.png", "resource/images/krushna_dwadashi.png", 
+    "resource/images/amasa.png", "resource/images/shukla_padyami.png",
+    "resource/images/shukla_vidiya.png", "resource/images/shukla_thadiya.png",
+    "resource/images/shukla_chavithi.png", "resource/images/shukla_panchami.png",
+    "resource/images/shukla_shashti.png", "resource/images/shukla_sapthami.png",
+    "resource/images/shukla_ashtami.png", "resource/images/shukla_navami.png",
+    "resource/images/shukla_dashami.png", "resource/images/shukla_ekadashi.png",
+    "resource/images/shukla_dwadashi.png", "resource/images/shukla_thrayodashi.png",
+    "resource/images/shukla_chathurdashi.png", "resource/images/punnami.png",
+    "resource/images/krushna_padyami.png", "resource/images/krushna_vidiya.png",
+    "resource/images/krushna_thadiya.png", "resource/images/krushna_chavithi.png",
+    "resource/images/krushna_panchami.png", "resource/images/krushna_shashti.png",
+    "resource/images/krushna_sapthami.png", "resource/images/krushna_ashtami.png",
+    "resource/images/krushna_navami.png", "resource/images/krushna_dashami.png",
+    "resource/images/krushna_ekadashi.png", "resource/images/krushna_dwadashi.png",
     "resource/images/krushna_thrayodashi.png", "resource/images/krushna_chathurdashi.png"
 };
 
+const char *nakshatra[27] = {
+    "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu",
+    "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni", "Hasta",
+    "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha", "Mula", "Purva Ashadha",
+    "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha", "Purva Bhadrapada",
+    "Uttara Bhadrapada", "Revati"
+};
+
+const char *varam[7] = {
+    "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+};
 // Variable definitions
 char prasthutha_varsham[20];
 char enaka_varsham[20];
@@ -117,7 +128,7 @@ void get_prasthutha_masam(void) {
     int month = tm.tm_mon;
 
     // int base_masam = 0;
-    int cycle_position = (month + 9) % 12;
+    int cycle_position = (month + 10) % 12;
     if (cycle_position < 0) cycle_position += 12;
 
     prasthutha_masa_soochika = cycle_position;
@@ -161,7 +172,7 @@ void move_ruthu_down(void) {
     snprintf(mundu_ruthuvu, sizeof(mundu_ruthuvu), "%s", ruthuvu[(prasthutha_ruthu_soochika + 1) % RUTHUVU_SIZE]);
 }
 
-gboolean load_moon_phase_images(void) {    
+gboolean load_moon_phase_images(void) {
     for (int i = 0; i < THITHI; i++) {
         pixbuf[i] = gdk_pixbuf_new_from_file(image_files[i], NULL);
         if (pixbuf[i] == NULL) {
